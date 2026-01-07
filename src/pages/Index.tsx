@@ -58,13 +58,11 @@ const Index = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Load habits from localStorage on mount
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        // Migrate old habits without createdAt/bestStreak
         const migrated = parsed.map((habit: Habit) => ({
           ...habit,
           createdAt: habit.createdAt || getTodayKey(),
@@ -105,10 +103,7 @@ const Index = () => {
           [todayKey]: true,
         };
 
-        // Calculate new current streak
         const newCurrentStreak = calculateCurrentStreak(newCompletions);
-
-        // Update best streak if current exceeds it
         const newBestStreak = Math.max(habit.bestStreak || 0, newCurrentStreak);
 
         return {
@@ -125,12 +120,12 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="bg-card border-b border-border py-4 px-4">
+      <header className="app-header">
         <h1 className="text-xl font-semibold text-center">Habit Tracker</h1>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 px-4 py-6 pb-24 max-w-md mx-auto w-full">
+      <main className="page-container flex-1 px-4 py-6 pb-24 max-w-md mx-auto w-full">
         {habits.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full min-h-[60vh]">
             <p className="text-muted-foreground text-lg mb-6">No habits yet</p>

@@ -12,13 +12,6 @@ interface HabitStatsListProps {
   habits: Habit[];
 }
 
-const getDateKey = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
 const calculateCompletionRate = (
   completions: Record<string, boolean> = {},
   createdAt: string
@@ -41,7 +34,7 @@ const calculateCompletionRate = (
 const HabitStatsList = ({ habits }: HabitStatsListProps) => {
   return (
     <div className="space-y-3">
-      {habits.map((habit) => {
+      {habits.map((habit, index) => {
         const totalCompletions = Object.values(habit.completions || {}).filter(
           Boolean
         ).length;
@@ -51,20 +44,24 @@ const HabitStatsList = ({ habits }: HabitStatsListProps) => {
         );
 
         return (
-          <div key={habit.id} className="habit-card">
+          <div
+            key={habit.id}
+            className="habit-card"
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
             <h4 className="font-medium">{habit.name}</h4>
             <div className="grid grid-cols-3 gap-4 mt-3 text-sm">
               <div>
                 <div className="text-muted-foreground text-xs">Completions</div>
-                <div className="font-medium text-lg">{totalCompletions}</div>
+                <div className="font-semibold text-lg">{totalCompletions}</div>
               </div>
               <div>
                 <div className="text-muted-foreground text-xs">Rate</div>
-                <div className="font-medium text-lg">{completionRate}%</div>
+                <div className="font-semibold text-lg">{completionRate}%</div>
               </div>
               <div>
                 <div className="text-muted-foreground text-xs">Best Streak</div>
-                <div className="font-medium text-lg">{habit.bestStreak || 0}</div>
+                <div className="font-semibold text-lg">{habit.bestStreak || 0}</div>
               </div>
             </div>
           </div>

@@ -8,34 +8,28 @@ const BottomNav = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
-      <div className="flex justify-around items-center h-16 max-w-md mx-auto">
+    <nav className="bottom-nav">
+      <div className="flex justify-around items-center h-16 max-w-md mx-auto px-4">
         <button
-          className={`flex flex-col items-center gap-1 p-2 ${
-            isActive("/") ? "text-foreground" : "text-muted-foreground"
-          }`}
+          className={`nav-button ${isActive("/") ? "active" : ""}`}
           onClick={() => navigate("/")}
         >
           <Home size={22} />
-          <span className="text-xs">Home</span>
+          <span className="text-xs font-medium">Home</span>
         </button>
         <button
-          className={`flex flex-col items-center gap-1 p-2 ${
-            isActive("/stats") ? "text-foreground" : "text-muted-foreground"
-          }`}
+          className={`nav-button ${isActive("/stats") ? "active" : ""}`}
           onClick={() => navigate("/stats")}
         >
           <BarChart2 size={22} />
-          <span className="text-xs">Stats</span>
+          <span className="text-xs font-medium">Stats</span>
         </button>
         <button
-          className={`flex flex-col items-center gap-1 p-2 ${
-            isActive("/settings") ? "text-foreground" : "text-muted-foreground"
-          }`}
+          className={`nav-button ${isActive("/settings") ? "active" : ""}`}
           onClick={() => navigate("/settings")}
         >
           <Settings size={22} />
-          <span className="text-xs">Settings</span>
+          <span className="text-xs font-medium">Settings</span>
         </button>
       </div>
     </nav>

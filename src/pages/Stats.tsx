@@ -42,7 +42,6 @@ const Stats = () => {
     }
   }, []);
 
-  // Calculate aggregate stats
   const calculateStats = () => {
     if (habits.length === 0) {
       return {
@@ -53,7 +52,6 @@ const Stats = () => {
       };
     }
 
-    // Find all unique dates with any completion
     const allDates = new Set<string>();
     let totalCompletions = 0;
     let longestStreak = 0;
@@ -70,7 +68,6 @@ const Stats = () => {
       }
     });
 
-    // Calculate average consistency
     let totalConsistency = 0;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -100,12 +97,12 @@ const Stats = () => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="bg-card border-b border-border py-4 px-4">
+      <header className="app-header">
         <h1 className="text-xl font-semibold text-center">Statistics</h1>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 px-4 py-6 pb-24 max-w-md mx-auto w-full overflow-y-auto">
+      <main className="page-container flex-1 px-4 py-6 pb-24 max-w-md mx-auto w-full overflow-y-auto">
         {habits.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full min-h-[60vh]">
             <p className="text-muted-foreground text-lg">No data yet</p>
@@ -114,22 +111,22 @@ const Stats = () => {
             </p>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-6">
             {/* Overview Stats */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="habit-card text-center">
+              <div className="stat-card">
                 <div className="text-2xl font-bold">{stats.totalDaysTracked}</div>
                 <div className="text-xs text-muted-foreground mt-1">Days Tracked</div>
               </div>
-              <div className="habit-card text-center">
+              <div className="stat-card">
                 <div className="text-2xl font-bold">{stats.totalCompletions}</div>
                 <div className="text-xs text-muted-foreground mt-1">Total Completions</div>
               </div>
-              <div className="habit-card text-center">
+              <div className="stat-card">
                 <div className="text-2xl font-bold">{stats.averageConsistency}%</div>
                 <div className="text-xs text-muted-foreground mt-1">Avg Consistency</div>
               </div>
-              <div className="habit-card text-center">
+              <div className="stat-card">
                 <div className="text-2xl font-bold text-orange-400">
                   🔥 {stats.longestStreak}
                 </div>
