@@ -1,14 +1,15 @@
 import { useState, useMemo } from "react";
-import { getISTDate, getDateKey, parseISTDateKey, getMonthName } from "@/lib/dateUtils";
+import { getISTDate, getDateKey, parseISTDateKey } from "@/lib/dateUtils";
 
 interface Habit {
   id: string;
   name: string;
   type: string;
   frequency: string;
-  completions?: Record<string, boolean>;
+  completions?: Record<string, boolean | number>;
   createdAt: string;
   bestStreak: number;
+  target?: number;
 }
 
 interface ProductivityGraphProps {
@@ -29,6 +30,13 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
   const [hoveredPoint, setHoveredPoint] = useState<DataPoint | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
+  // Helper to check completion
+  const isCompleted = (value: boolean | number | undefined, target: number = 1): boolean => {
+    if (value === undefined) return false;
+    if (typeof value === "boolean") return value;
+    return value >= target;
+  };
+
   const data = useMemo(() => {
     if (habits.length === 0) return [];
 
@@ -47,26 +55,31 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
         let completed = 0;
         let possible = 0;
 
-        for (let d = new Date(weekStart); d <= weekEnd; d.setDate(d.getDate() + 1)) {
+        for (let d = new Date(weekStart); d <= weekEnd && d <= today; d.setDate(d.getDate() + 1)) {
           const dateKey = getDateKey(d);
           habits.forEach((habit) => {
             const createdDate = parseISTDateKey(habit.createdAt);
             createdDate.setHours(0, 0, 0, 0);
+            const target = habit.target || 1;
+            
             if (d >= createdDate) {
               if (habit.frequency === "daily") {
                 possible++;
-                if (habit.completions?.[dateKey]) completed++;
+                if (isCompleted(habit.completions?.[dateKey], target)) completed++;
               } else if (habit.frequency === "weekly" && d.getDay() === 0) {
+                // Weekly habits: only count on Sundays
                 possible++;
-                if (habit.completions?.[dateKey]) completed++;
+                if (isCompleted(habit.completions?.[dateKey], target)) completed++;
               }
             }
           });
         }
 
-        const productivity = possible > 0 ? Math.round((completed / possible) * 100) : 0;
+        const productivity = possible > 0 
+          ? Math.min(100, Math.max(0, Math.round((completed / possible) * 100))) 
+          : 0;
         points.push({
-          label: `Week ${8 - weekOffset}`,
+          label: `W${8 - weekOffset}`,
           productivity,
           completed,
           possible,
@@ -90,19 +103,23 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
           habits.forEach((habit) => {
             const createdDate = parseISTDateKey(habit.createdAt);
             createdDate.setHours(0, 0, 0, 0);
+            const target = habit.target || 1;
+            
             if (d >= createdDate) {
               if (habit.frequency === "daily") {
                 possible++;
-                if (habit.completions?.[dateKey]) completed++;
+                if (isCompleted(habit.completions?.[dateKey], target)) completed++;
               } else if (habit.frequency === "weekly" && d.getDay() === 0) {
                 possible++;
-                if (habit.completions?.[dateKey]) completed++;
+                if (isCompleted(habit.completions?.[dateKey], target)) completed++;
               }
             }
           });
         }
 
-        const productivity = possible > 0 ? Math.round((completed / possible) * 100) : 0;
+        const productivity = possible > 0 
+          ? Math.min(100, Math.max(0, Math.round((completed / possible) * 100))) 
+          : 0;
         points.push({
           label: monthNames[monthDate.getMonth()],
           productivity,
@@ -135,7 +152,7 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
 
     return {
       trend,
-      change,
+      change: Math.min(100, Math.max(-100, change)),
       current: current.productivity,
       bestPeriod,
       periodType: viewMode === "weekly" ? "week" : "month",
@@ -170,7 +187,7 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
     return path;
   };
 
-  const handlePointHover = (point: DataPoint, index: number, event: React.MouseEvent) => {
+  const handlePointHover = (point: DataPoint, index: number) => {
     const x = padding.left + (index / (data.length - 1)) * graphWidth;
     const y = padding.top + graphHeight - (point.productivity / 100) * graphHeight;
     setHoveredPoint(point);
@@ -193,7 +210,7 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            This Grind
+            Weekly
           </button>
           <button
             onClick={() => setViewMode("monthly")}
@@ -203,7 +220,7 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Big Picture
+            Monthly
           </button>
         </div>
       </div>
@@ -279,7 +296,7 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
                   stroke="hsl(var(--primary))"
                   strokeWidth={2}
                   className="transition-all duration-150 cursor-pointer"
-                  onMouseEnter={(e) => handlePointHover(point, i, e)}
+                  onMouseEnter={() => handlePointHover(point, i)}
                   onMouseLeave={() => setHoveredPoint(null)}
                 />
               </g>
@@ -318,7 +335,7 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
             <div className="font-medium">{hoveredPoint.label}</div>
             <div className="text-primary">{hoveredPoint.productivity}%</div>
             <div className="text-xs opacity-70">
-              {hoveredPoint.completed}/{hoveredPoint.possible} completed
+              {hoveredPoint.completed}/{hoveredPoint.possible} done
             </div>
           </div>
         )}
@@ -327,21 +344,16 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
       {/* Insights */}
       {insights && (
         <div className="mt-4 pt-4 border-t border-border/50 space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">
-              {insights.trend === "up" ? "📈" : insights.trend === "down" ? "📉" : "➡️"}
-            </span>
-            <span className="text-sm">
-              {insights.trend === "up" && (
-                <span className="text-green-400">Momentum looks good. Don't break it.</span>
-              )}
-              {insights.trend === "down" && (
-                <span className="text-red-400">You slipped. Not the end. Lock back in.</span>
-              )}
-              {insights.trend === "stable" && (
-                <span className="text-muted-foreground">You're coasting. Push harder.</span>
-              )}
-            </span>
+          <div className="text-sm">
+            {insights.trend === "up" && (
+              <span className="text-green-400">Momentum looks good. Don't break it.</span>
+            )}
+            {insights.trend === "down" && (
+              <span className="text-red-400">You slipped. Not the end. Lock back in.</span>
+            )}
+            {insights.trend === "stable" && (
+              <span className="text-muted-foreground">Holding steady. Push harder.</span>
+            )}
           </div>
           
           <div className="text-sm text-muted-foreground">
@@ -349,14 +361,7 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
             <span className={insights.change >= 0 ? "text-green-400" : "text-red-400"}>
               {insights.change >= 0 ? "+" : ""}{insights.change}%
             </span>{" "}
-            vs last {insights.periodType}
-          </div>
-          
-          <div className="text-sm text-muted-foreground">
-            🏆 Best {insights.periodType} so far:{" "}
-            <span className="text-foreground">
-              {insights.bestPeriod.label} ({insights.bestPeriod.productivity}%)
-            </span>
+            vs last
           </div>
         </div>
       )}

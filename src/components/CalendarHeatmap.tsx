@@ -5,7 +5,8 @@ interface CalendarHeatmapProps {
   habits: Array<{
     id: string;
     name: string;
-    completions?: Record<string, boolean>;
+    completions?: Record<string, boolean | number>;
+    target?: number;
   }>;
 }
 
@@ -19,7 +20,7 @@ const formatDate = (dateKey: string) => {
 };
 
 const getIntensityClass = (count: number, maxCount: number) => {
-  if (count === 0) return "bg-neutral-800";
+  if (count === 0) return "bg-secondary";
   const ratio = count / Math.max(maxCount, 1);
   if (ratio <= 0.25) return "bg-green-900";
   if (ratio <= 0.5) return "bg-green-700";
@@ -33,6 +34,13 @@ const CalendarHeatmap = ({ habits }: CalendarHeatmapProps) => {
 
   const days = getLastNDays(90);
 
+  // Helper to check completion
+  const isCompleted = (value: boolean | number | undefined, target: number = 1): boolean => {
+    if (value === undefined) return false;
+    if (typeof value === "boolean") return value;
+    return value >= target;
+  };
+
   // Calculate completions per day
   const completionsPerDay: Record<string, number> = {};
   let maxCompletions = 0;
@@ -40,7 +48,8 @@ const CalendarHeatmap = ({ habits }: CalendarHeatmapProps) => {
   days.forEach((day) => {
     let count = 0;
     habits.forEach((habit) => {
-      if (habit.completions?.[day]) {
+      const target = habit.target || 1;
+      if (isCompleted(habit.completions?.[day], target)) {
         count++;
       }
     });
@@ -83,15 +92,14 @@ const CalendarHeatmap = ({ habits }: CalendarHeatmapProps) => {
   });
 
   const getTooltipText = (count: number) => {
-    if (count === 0) return "Nothing done. Empty day.";
-    if (count === 1) return "1 habit done — a start.";
-    if (count <= 3) return `${count} habits done — respectable.`;
-    return `${count} habits done — locked in.`;
+    if (count === 0) return "Nothing done.";
+    if (count === 1) return "1 habit done.";
+    return `${count} habits done.`;
   };
 
   return (
     <div className="relative">
-      <h3 className="text-sm text-muted-foreground mb-4">Your Last 90 Days</h3>
+      <h3 className="text-sm text-muted-foreground mb-4">Last 90 Days</h3>
       
       <div className="flex gap-1">
         {/* Day labels */}
@@ -128,13 +136,13 @@ const CalendarHeatmap = ({ habits }: CalendarHeatmapProps) => {
 
       {/* Legend */}
       <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground">
-        <span>Ghosting</span>
-        <div className="w-3 h-3 rounded-sm bg-neutral-800" />
+        <span>Less</span>
+        <div className="w-3 h-3 rounded-sm bg-secondary" />
         <div className="w-3 h-3 rounded-sm bg-green-900" />
         <div className="w-3 h-3 rounded-sm bg-green-700" />
         <div className="w-3 h-3 rounded-sm bg-green-500" />
         <div className="w-3 h-3 rounded-sm bg-green-400" />
-        <span>Locked In</span>
+        <span>More</span>
       </div>
 
       {/* Tooltip */}

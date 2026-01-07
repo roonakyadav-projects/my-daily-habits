@@ -217,13 +217,14 @@ const YearReview = () => {
     const recoveryRatio = missedDays > 0 ? Math.min(successfulComebacks / missedDays, 1) : (totalCompleted > 0 ? 1 : 0);
     const recoveryScore = recoveryRatio * 100 * 0.1;
 
-    // Final discipline score
-    const disciplineScore = Math.round(completionScore + streakScore + consistencyScore + recoveryScore);
+    // Final discipline score - clamped between 0-100
+    const rawScore = completionScore + streakScore + consistencyScore + recoveryScore;
+    const disciplineScore = Math.min(100, Math.max(0, Math.round(rawScore)));
 
     return {
       daysTracked,
       totalCompletions,
-      avgShowingUp,
+      avgShowingUp: Math.min(100, Math.max(0, avgShowingUp)),
       longestStreak,
       monthlyData,
       bestMonth,
@@ -232,12 +233,11 @@ const YearReview = () => {
       mostStruggled,
       disciplineScore,
       hasData: habits.length > 0 && totalCompletions > 0,
-      // Debug info (can be removed later)
       scoreBreakdown: {
-        completion: Math.round(completionScore),
-        streak: Math.round(streakScore),
-        consistency: Math.round(consistencyScore),
-        recovery: Math.round(recoveryScore),
+        completion: Math.min(40, Math.max(0, Math.round(completionScore))),
+        streak: Math.min(30, Math.max(0, Math.round(streakScore))),
+        consistency: Math.min(20, Math.max(0, Math.round(consistencyScore))),
+        recovery: Math.min(10, Math.max(0, Math.round(recoveryScore))),
       },
     };
   }, [habits]);

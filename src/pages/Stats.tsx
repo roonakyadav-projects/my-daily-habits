@@ -3,6 +3,7 @@ import BottomNav from "@/components/BottomNav";
 import ProductivityGraph from "@/components/ProductivityGraph";
 import CalendarHeatmap from "@/components/CalendarHeatmap";
 import HabitStatsList from "@/components/HabitStatsList";
+import MonthlySummary from "@/components/MonthlySummary";
 import { getTodayKey, getISTDate, parseISTDateKey } from "@/lib/dateUtils";
 
 interface Habit {
@@ -10,9 +11,10 @@ interface Habit {
   name: string;
   type: string;
   frequency: string;
-  completions?: Record<string, boolean>;
+  completions?: Record<string, boolean | number>;
   createdAt: string;
   bestStreak: number;
+  target?: number;
 }
 
 const STORAGE_KEY = "habits";
@@ -37,6 +39,13 @@ const Stats = () => {
     }
   }, []);
 
+  // Helper to check completion based on type
+  const isCompleted = (value: boolean | number | undefined, target: number = 1): boolean => {
+    if (value === undefined) return false;
+    if (typeof value === "boolean") return value;
+    return value >= target;
+  };
+
   const calculateStats = () => {
     if (habits.length === 0) {
       return {
@@ -52,8 +61,9 @@ const Stats = () => {
     let longestStreak = 0;
 
     habits.forEach((habit) => {
-      Object.entries(habit.completions || {}).forEach(([date, completed]) => {
-        if (completed) {
+      const target = habit.target || 1;
+      Object.entries(habit.completions || {}).forEach(([date, value]) => {
+        if (isCompleted(value, target)) {
           allDates.add(date);
           totalCompletions++;
         }
@@ -64,20 +74,38 @@ const Stats = () => {
     });
 
     let totalConsistency = 0;
+    let countedHabits = 0;
     const today = getISTDate();
     today.setHours(0, 0, 0, 0);
 
     habits.forEach((habit) => {
       const createdDate = parseISTDateKey(habit.createdAt);
       createdDate.setHours(0, 0, 0, 0);
-      const daysSinceCreation =
-        Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      const completedDays = Object.values(habit.completions || {}).filter(Boolean).length;
-      const consistency = daysSinceCreation > 0 ? (completedDays / daysSinceCreation) * 100 : 0;
+      const target = habit.target || 1;
+      
+      // For daily habits: count every day
+      // For weekly habits: count weeks since creation
+      let expectedCompletions = 0;
+      
+      if (habit.frequency === "daily") {
+        expectedCompletions = Math.max(1, Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+      } else {
+        // Weekly: count Sundays since creation
+        const weeks = Math.max(1, Math.ceil((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24 * 7)));
+        expectedCompletions = weeks;
+      }
+      
+      const completedCount = Object.values(habit.completions || {}).filter(v => isCompleted(v, target)).length;
+      const consistency = expectedCompletions > 0 
+        ? Math.min(100, (completedCount / expectedCompletions) * 100) 
+        : 0;
       totalConsistency += consistency;
+      countedHabits++;
     });
 
-    const averageConsistency = Math.round(totalConsistency / habits.length);
+    const averageConsistency = countedHabits > 0 
+      ? Math.min(100, Math.max(0, Math.round(totalConsistency / countedHabits)))
+      : 0;
 
     return {
       totalDaysTracked: allDates.size,
@@ -115,19 +143,22 @@ const Stats = () => {
               </div>
               <div className="stat-card">
                 <div className="text-2xl font-bold">{stats.totalCompletions}</div>
-                <div className="text-xs text-muted-foreground mt-1">Times You Showed Up</div>
+                <div className="text-xs text-muted-foreground mt-1">Times Showed Up</div>
               </div>
               <div className="stat-card">
                 <div className="text-2xl font-bold">{stats.averageConsistency}%</div>
-                <div className="text-xs text-muted-foreground mt-1">Showing Up %</div>
+                <div className="text-xs text-muted-foreground mt-1">Showing Up</div>
               </div>
               <div className="stat-card">
                 <div className="text-2xl font-bold text-orange-400">
                   🔥 {stats.longestStreak}
                 </div>
-                <div className="text-xs text-muted-foreground mt-1">Best You Ever Did</div>
+                <div className="text-xs text-muted-foreground mt-1">Best Run</div>
               </div>
             </div>
+
+            {/* Monthly Summary */}
+            <MonthlySummary habits={habits} />
 
             {/* Productivity Trend Graph */}
             <ProductivityGraph habits={habits} />
@@ -139,7 +170,7 @@ const Stats = () => {
 
             {/* Per-Habit Stats */}
             <div>
-              <h3 className="text-lg font-medium mb-4">The Breakdown</h3>
+              <h3 className="text-base font-medium mb-4">The Breakdown</h3>
               <HabitStatsList habits={habits} />
             </div>
           </div>
