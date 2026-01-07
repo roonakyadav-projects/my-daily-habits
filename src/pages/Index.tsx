@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import AddHabitModal from "@/components/AddHabitModal";
+import DeleteHabitDialog from "@/components/DeleteHabitDialog";
 import BottomNav from "@/components/BottomNav";
 import HabitList from "@/components/HabitList";
 import { getTodayKey, getISTDate, getDateKey } from "@/lib/dateUtils";
@@ -43,6 +44,7 @@ const calculateCurrentStreak = (completions: Record<string, boolean> = {}): numb
 const Index = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Habit | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -103,6 +105,21 @@ const Index = () => {
     saveHabits(newHabits);
   };
 
+  const handleDeleteClick = (habitId: string) => {
+    const habit = habits.find((h) => h.id === habitId);
+    if (habit) {
+      setDeleteTarget(habit);
+    }
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteTarget) {
+      const newHabits = habits.filter((h) => h.id !== deleteTarget.id);
+      saveHabits(newHabits);
+      setDeleteTarget(null);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -134,7 +151,11 @@ const Index = () => {
                 Add a Habit
               </button>
             </div>
-            <HabitList habits={habits} onMarkDone={handleMarkDone} />
+            <HabitList 
+              habits={habits} 
+              onMarkDone={handleMarkDone} 
+              onDelete={handleDeleteClick}
+            />
           </div>
         )}
       </main>
@@ -147,6 +168,14 @@ const Index = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleAddHabit}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteHabitDialog
+        isOpen={deleteTarget !== null}
+        habitName={deleteTarget?.name || ""}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
       />
     </div>
   );

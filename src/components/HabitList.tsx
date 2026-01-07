@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { getTodayKey, getISTDate, getDateKey, parseISTDateKey } from "@/lib/dateUtils";
 
 interface Habit {
@@ -13,6 +15,7 @@ interface Habit {
 interface HabitListProps {
   habits: Habit[];
   onMarkDone: (habitId: string) => void;
+  onDelete: (habitId: string) => void;
 }
 
 const getTypeLabel = (type: string) => {
@@ -73,7 +76,7 @@ const calculateConsistency = (
   return Math.round((completedDays / daysSinceCreation) * 100);
 };
 
-const HabitList = ({ habits, onMarkDone }: HabitListProps) => {
+const HabitList = ({ habits, onMarkDone, onDelete }: HabitListProps) => {
   const todayKey = getTodayKey();
 
   return (
@@ -96,7 +99,7 @@ const HabitList = ({ habits, onMarkDone }: HabitListProps) => {
             className={`habit-card ${isDoneToday ? "completed" : ""}`}
             style={{ animationDelay: `${index * 50}ms` }}
           >
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="font-medium text-lg truncate">{habit.name}</h3>
@@ -133,13 +136,22 @@ const HabitList = ({ habits, onMarkDone }: HabitListProps) => {
                 )}
               </div>
 
-              <button
-                className={`btn-mark-done ${isDoneToday ? "done" : "active"}`}
-                onClick={() => !isDoneToday && onMarkDone(habit.id)}
-                disabled={isDoneToday}
-              >
-                {isDoneToday ? "Done. Don't overthink it." : "Handled ✅"}
-              </button>
+              <div className="flex flex-col gap-2 items-end">
+                <button
+                  className={`btn-mark-done ${isDoneToday ? "done" : "active"}`}
+                  onClick={() => !isDoneToday && onMarkDone(habit.id)}
+                  disabled={isDoneToday}
+                >
+                  {isDoneToday ? "Done. Don't overthink it." : "Handled ✅"}
+                </button>
+                <button
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-all duration-200"
+                  onClick={() => onDelete(habit.id)}
+                  title="Delete habit"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
           </div>
         );
