@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import BottomNav from "@/components/BottomNav";
+import ProductivityGraph from "@/components/ProductivityGraph";
 import CalendarHeatmap from "@/components/CalendarHeatmap";
 import HabitStatsList from "@/components/HabitStatsList";
 
@@ -133,6 +134,9 @@ const Stats = () => {
                 <div className="text-xs text-muted-foreground mt-1">Longest Streak</div>
               </div>
             </div>
+
+            {/* Productivity Trend Graph */}
+            <ProductivityGraph habits={habits} />
 
             {/* Calendar Heatmap */}
             <div className="habit-card">
