@@ -1,4 +1,4 @@
-import { Home, BarChart2, Settings } from "lucide-react";
+import { Home, BarChart2, Calendar } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const BottomNav = () => {
@@ -25,11 +25,11 @@ const BottomNav = () => {
           <span className="text-xs font-medium">Stats</span>
         </button>
         <button
-          className={`nav-button ${isActive("/settings") ? "active" : ""}`}
-          onClick={() => navigate("/settings")}
+          className={`nav-button ${isActive("/2026") ? "active" : ""}`}
+          onClick={() => navigate("/2026")}
         >
-          <Settings size={22} />
-          <span className="text-xs font-medium">Settings</span>
+          <Calendar size={22} />
+          <span className="text-xs font-medium">2026</span>
         </button>
       </div>
     </nav>

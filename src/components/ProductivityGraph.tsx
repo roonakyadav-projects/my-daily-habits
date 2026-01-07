@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { getISTDate, getDateKey, parseISTDateKey, getMonthName } from "@/lib/dateUtils";
 
 interface Habit {
   id: string;
@@ -23,13 +24,6 @@ interface DataPoint {
   endDate: Date;
 }
 
-const getDateKey = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
 const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
   const [viewMode, setViewMode] = useState<"weekly" | "monthly">("weekly");
   const [hoveredPoint, setHoveredPoint] = useState<DataPoint | null>(null);
@@ -38,7 +32,7 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
   const data = useMemo(() => {
     if (habits.length === 0) return [];
 
-    const today = new Date();
+    const today = getISTDate();
     today.setHours(0, 0, 0, 0);
     const points: DataPoint[] = [];
 
@@ -56,7 +50,7 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
         for (let d = new Date(weekStart); d <= weekEnd; d.setDate(d.getDate() + 1)) {
           const dateKey = getDateKey(d);
           habits.forEach((habit) => {
-            const createdDate = new Date(habit.createdAt);
+            const createdDate = parseISTDateKey(habit.createdAt);
             createdDate.setHours(0, 0, 0, 0);
             if (d >= createdDate) {
               if (habit.frequency === "daily") {
@@ -94,7 +88,7 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
         for (let d = new Date(monthStart); d <= monthEnd && d <= today; d.setDate(d.getDate() + 1)) {
           const dateKey = getDateKey(d);
           habits.forEach((habit) => {
-            const createdDate = new Date(habit.createdAt);
+            const createdDate = parseISTDateKey(habit.createdAt);
             createdDate.setHours(0, 0, 0, 0);
             if (d >= createdDate) {
               if (habit.frequency === "daily") {
