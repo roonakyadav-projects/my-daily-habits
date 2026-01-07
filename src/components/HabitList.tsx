@@ -125,14 +125,22 @@ const HabitList = ({ habits, onMarkDone }: HabitListProps) => {
 
                 {isDaily && (
                   <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm">
-                    <span className="text-orange-400">
-                      🔥 {currentStreak} day{currentStreak !== 1 ? "s" : ""}
-                    </span>
-                    <span className="text-yellow-500">
-                      🏆 {bestStreak} day{bestStreak !== 1 ? "s" : ""}
-                    </span>
+                    {currentStreak === 0 ? (
+                      <span className="text-muted-foreground text-xs">
+                        Streak reset. Happens. Start again.
+                      </span>
+                    ) : (
+                      <>
+                        <span className="text-orange-400">
+                          🔥 {currentStreak} day{currentStreak !== 1 ? "s" : ""} run
+                        </span>
+                        <span className="text-yellow-500">
+                          🏆 Best: {bestStreak}
+                        </span>
+                      </>
+                    )}
                     <span className="text-muted-foreground">
-                      {consistency}% consistent
+                      {consistency}% showing up
                     </span>
                   </div>
                 )}
@@ -143,7 +151,7 @@ const HabitList = ({ habits, onMarkDone }: HabitListProps) => {
                 onClick={() => !isDoneToday && onMarkDone(habit.id)}
                 disabled={isDoneToday}
               >
-                {isDoneToday ? "Done ✓" : "Mark Done"}
+                {isDoneToday ? "Done. Don't overthink it." : "Handled ✅"}
               </button>
             </div>
           </div>

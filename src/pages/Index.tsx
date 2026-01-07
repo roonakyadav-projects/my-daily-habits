@@ -128,12 +128,13 @@ const Index = () => {
       <main className="page-container flex-1 px-4 py-6 pb-24 max-w-md mx-auto w-full">
         {habits.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full min-h-[60vh]">
-            <p className="text-muted-foreground text-lg mb-6">No habits yet</p>
+            <p className="text-muted-foreground text-lg">Nothing tracked yet.</p>
+            <p className="text-muted-foreground text-sm mt-2 mb-6">You know what that means. Start.</p>
             <button
               className="btn-primary text-lg px-8 py-4"
               onClick={() => setIsModalOpen(true)}
             >
-              Add Habit
+              Add a Habit
             </button>
           </div>
         ) : (
@@ -144,7 +145,7 @@ const Index = () => {
                 className="btn-primary text-sm px-4 py-2"
                 onClick={() => setIsModalOpen(true)}
               >
-                Add Habit
+                Add a Habit
               </button>
             </div>
             <HabitList habits={habits} onMarkDone={handleMarkDone} />

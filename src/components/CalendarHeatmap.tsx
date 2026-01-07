@@ -101,9 +101,16 @@ const CalendarHeatmap = ({ habits }: CalendarHeatmapProps) => {
     }
   });
 
+  const getTooltipText = (count: number) => {
+    if (count === 0) return "Nothing done. Empty day.";
+    if (count === 1) return "1 habit done — a start.";
+    if (count <= 3) return `${count} habits done — respectable.`;
+    return `${count} habits done — locked in.`;
+  };
+
   return (
     <div className="relative">
-      <h3 className="text-sm text-muted-foreground mb-4">Last 90 Days</h3>
+      <h3 className="text-sm text-muted-foreground mb-4">Your Last 90 Days</h3>
       
       <div className="flex gap-1">
         {/* Day labels */}
@@ -140,13 +147,13 @@ const CalendarHeatmap = ({ habits }: CalendarHeatmapProps) => {
 
       {/* Legend */}
       <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground">
-        <span>Less</span>
+        <span>Ghosting</span>
         <div className="w-3 h-3 rounded-sm bg-neutral-800" />
         <div className="w-3 h-3 rounded-sm bg-green-900" />
         <div className="w-3 h-3 rounded-sm bg-green-700" />
         <div className="w-3 h-3 rounded-sm bg-green-500" />
         <div className="w-3 h-3 rounded-sm bg-green-400" />
-        <span>More</span>
+        <span>Locked In</span>
       </div>
 
       {/* Tooltip */}
@@ -160,8 +167,7 @@ const CalendarHeatmap = ({ habits }: CalendarHeatmapProps) => {
         >
           <div className="font-medium">{formatDate(hoveredDay)}</div>
           <div className="text-muted-foreground">
-            {completionsPerDay[hoveredDay] || 0} habit
-            {completionsPerDay[hoveredDay] !== 1 ? "s" : ""} completed
+            {getTooltipText(completionsPerDay[hoveredDay] || 0)}
           </div>
         </div>
       )}

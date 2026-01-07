@@ -76,18 +76,18 @@ const AddHabitModal = ({ isOpen, onClose, onSave }: AddHabitModalProps) => {
           animation: isClosing ? "modal-exit 0.15s ease-out forwards" : undefined,
         }}
       >
-        <h2 className="text-xl font-semibold mb-6">Add New Habit</h2>
+        <h2 className="text-xl font-semibold mb-6">New Habit</h2>
 
         <div className="space-y-5">
           <div>
             <label className="block text-sm text-muted-foreground mb-2">
-              Habit Name
+              What are you tracking?
             </label>
             <input
               ref={inputRef}
               type="text"
               className="form-input"
-              placeholder="Enter habit name..."
+              placeholder="Name it first..."
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
@@ -131,14 +131,14 @@ const AddHabitModal = ({ isOpen, onClose, onSave }: AddHabitModalProps) => {
 
         <div className="flex gap-3 mt-8">
           <button className="btn-secondary flex-1" onClick={handleClose}>
-            Cancel
+            Nah, go back
           </button>
           <button
             className="btn-primary flex-1"
             onClick={handleSubmit}
             disabled={!name.trim()}
           >
-            Create Habit
+            Lock it in
           </button>
         </div>
       </div>

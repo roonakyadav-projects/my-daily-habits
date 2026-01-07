@@ -99,16 +99,16 @@ const Stats = () => {
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="app-header">
-        <h1 className="text-xl font-semibold text-center">Statistics</h1>
+        <h1 className="text-xl font-semibold text-center">The Truth</h1>
       </header>
 
       {/* Main Content */}
       <main className="page-container flex-1 px-4 py-6 pb-24 max-w-md mx-auto w-full overflow-y-auto">
         {habits.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full min-h-[60vh]">
-            <p className="text-muted-foreground text-lg">No data yet</p>
+            <p className="text-muted-foreground text-lg">No data yet.</p>
             <p className="text-muted-foreground text-sm mt-2">
-              Add habits and complete them to see stats
+              That's on you. Build something.
             </p>
           </div>
         ) : (
@@ -121,17 +121,17 @@ const Stats = () => {
               </div>
               <div className="stat-card">
                 <div className="text-2xl font-bold">{stats.totalCompletions}</div>
-                <div className="text-xs text-muted-foreground mt-1">Total Completions</div>
+                <div className="text-xs text-muted-foreground mt-1">Times You Showed Up</div>
               </div>
               <div className="stat-card">
                 <div className="text-2xl font-bold">{stats.averageConsistency}%</div>
-                <div className="text-xs text-muted-foreground mt-1">Avg Consistency</div>
+                <div className="text-xs text-muted-foreground mt-1">Showing Up %</div>
               </div>
               <div className="stat-card">
                 <div className="text-2xl font-bold text-orange-400">
                   🔥 {stats.longestStreak}
                 </div>
-                <div className="text-xs text-muted-foreground mt-1">Longest Streak</div>
+                <div className="text-xs text-muted-foreground mt-1">Best You Ever Did</div>
               </div>
             </div>
 
@@ -145,7 +145,7 @@ const Stats = () => {
 
             {/* Per-Habit Stats */}
             <div>
-              <h3 className="text-lg font-medium mb-4">Habit Breakdown</h3>
+              <h3 className="text-lg font-medium mb-4">The Breakdown</h3>
               <HabitStatsList habits={habits} />
             </div>
           </div>
