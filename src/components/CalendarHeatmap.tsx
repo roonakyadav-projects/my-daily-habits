@@ -85,7 +85,6 @@ const CalendarHeatmap = ({ habits }: CalendarHeatmapProps) => {
     const dayOfWeek = date.getDay();
 
     if (index === 0) {
-      // Pad the first week with empty slots
       for (let i = 0; i < dayOfWeek; i++) {
         currentWeek.push("");
       }
@@ -94,7 +93,6 @@ const CalendarHeatmap = ({ habits }: CalendarHeatmapProps) => {
     currentWeek.push(day);
 
     if (dayOfWeek === 6 || index === days.length - 1) {
-      // Pad the last week if needed
       while (currentWeek.length < 7) {
         currentWeek.push("");
       }
@@ -105,18 +103,18 @@ const CalendarHeatmap = ({ habits }: CalendarHeatmapProps) => {
 
   return (
     <div className="relative">
-      <h3 className="text-sm text-muted-foreground mb-3">Last 90 Days</h3>
+      <h3 className="text-sm text-muted-foreground mb-4">Last 90 Days</h3>
       
       <div className="flex gap-1">
         {/* Day labels */}
-        <div className="flex flex-col gap-1 text-xs text-muted-foreground mr-1">
-          <span className="h-3">S</span>
-          <span className="h-3">M</span>
-          <span className="h-3">T</span>
-          <span className="h-3">W</span>
-          <span className="h-3">T</span>
-          <span className="h-3">F</span>
-          <span className="h-3">S</span>
+        <div className="flex flex-col gap-1 text-xs text-muted-foreground mr-2 pt-0.5">
+          <span className="h-3 leading-3">S</span>
+          <span className="h-3 leading-3">M</span>
+          <span className="h-3 leading-3">T</span>
+          <span className="h-3 leading-3">W</span>
+          <span className="h-3 leading-3">T</span>
+          <span className="h-3 leading-3">F</span>
+          <span className="h-3 leading-3">S</span>
         </div>
 
         {/* Heatmap grid */}
@@ -126,7 +124,7 @@ const CalendarHeatmap = ({ habits }: CalendarHeatmapProps) => {
               {week.map((day, dayIndex) => (
                 <div
                   key={`${weekIndex}-${dayIndex}`}
-                  className={`w-3 h-3 rounded-sm ${
+                  className={`heatmap-cell ${
                     day
                       ? getIntensityClass(completionsPerDay[day] || 0, maxCompletions)
                       : "bg-transparent"
@@ -141,7 +139,7 @@ const CalendarHeatmap = ({ habits }: CalendarHeatmapProps) => {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground">
         <span>Less</span>
         <div className="w-3 h-3 rounded-sm bg-neutral-800" />
         <div className="w-3 h-3 rounded-sm bg-green-900" />
@@ -154,11 +152,10 @@ const CalendarHeatmap = ({ habits }: CalendarHeatmapProps) => {
       {/* Tooltip */}
       {hoveredDay && (
         <div
-          className="fixed z-50 bg-popover border border-border rounded-md px-3 py-2 text-sm shadow-lg pointer-events-none"
+          className="tooltip"
           style={{
             left: tooltipPos.x,
             top: tooltipPos.y,
-            transform: "translate(-50%, -100%)",
           }}
         >
           <div className="font-medium">{formatDate(hoveredDay)}</div>

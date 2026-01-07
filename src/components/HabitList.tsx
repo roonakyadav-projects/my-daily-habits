@@ -45,7 +45,6 @@ const calculateCurrentStreak = (completions: Record<string, boolean> = {}): numb
   const today = new Date();
   const todayKey = getDateKey(today);
 
-  // If today is not completed, streak is 0
   if (!completions[todayKey]) {
     return 0;
   }
@@ -53,7 +52,6 @@ const calculateCurrentStreak = (completions: Record<string, boolean> = {}): numb
   let streak = 0;
   let currentDate = new Date(today);
 
-  // Count backwards from today
   while (true) {
     const dateKey = getDateKey(currentDate);
     if (completions[dateKey]) {
@@ -74,18 +72,15 @@ const calculateConsistency = (
   const createdDate = new Date(createdAt);
   const today = new Date();
   
-  // Reset time to midnight for accurate day counting
   createdDate.setHours(0, 0, 0, 0);
   today.setHours(0, 0, 0, 0);
 
-  // Calculate days since creation (including today)
   const daysSinceCreation = Math.floor(
     (today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)
   ) + 1;
 
   if (daysSinceCreation <= 0) return 0;
 
-  // Count completed days
   const completedDays = Object.values(completions).filter(Boolean).length;
 
   return Math.round((completedDays / daysSinceCreation) * 100);
@@ -96,11 +91,10 @@ const HabitList = ({ habits, onMarkDone }: HabitListProps) => {
 
   return (
     <div className="space-y-3">
-      {habits.map((habit) => {
+      {habits.map((habit, index) => {
         const isDoneToday = habit.completions?.[todayKey] === true;
         const isDaily = habit.frequency === "daily";
         
-        // Only calculate streaks for daily habits
         const currentStreak = isDaily
           ? calculateCurrentStreak(habit.completions)
           : null;
@@ -112,23 +106,23 @@ const HabitList = ({ habits, onMarkDone }: HabitListProps) => {
         return (
           <div
             key={habit.id}
-            className={`habit-card ${isDoneToday ? "opacity-60" : ""}`}
+            className={`habit-card ${isDoneToday ? "completed" : ""}`}
+            style={{ animationDelay: `${index * 50}ms` }}
           >
             <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-medium text-lg">{habit.name}</h3>
+                  <h3 className="font-medium text-lg truncate">{habit.name}</h3>
                   {isDoneToday && (
-                    <span className="text-green-500 text-sm">✓</span>
+                    <span className="text-green-400 text-sm flex-shrink-0">✓</span>
                   )}
                 </div>
-                <div className="flex gap-4 mt-1 text-sm text-muted-foreground">
+                <div className="flex gap-3 mt-1.5 text-sm text-muted-foreground">
                   <span>{getTypeLabel(habit.type)}</span>
-                  <span>•</span>
+                  <span className="opacity-50">•</span>
                   <span className="capitalize">{habit.frequency}</span>
                 </div>
 
-                {/* Streak & Consistency Stats - Only for daily habits */}
                 {isDaily && (
                   <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm">
                     <span className="text-orange-400">
@@ -145,11 +139,7 @@ const HabitList = ({ habits, onMarkDone }: HabitListProps) => {
               </div>
 
               <button
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors shrink-0 ${
-                  isDoneToday
-                    ? "bg-secondary text-muted-foreground cursor-not-allowed"
-                    : "bg-green-600 text-white hover:bg-green-700"
-                }`}
+                className={`btn-mark-done ${isDoneToday ? "done" : "active"}`}
                 onClick={() => !isDoneToday && onMarkDone(habit.id)}
                 disabled={isDoneToday}
               >
