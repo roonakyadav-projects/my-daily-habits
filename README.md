@@ -1,73 +1,129 @@
-# Welcome to your Lovable project
+# My Daily Habits
 
-## Project info
+A comprehensive habit tracking application designed to help users build and maintain positive daily routines. Track your progress with interactive calendars, detailed statistics, and insightful visualizations.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Features
 
-## How can I edit this code?
+- **Multiple Habit Types**: Support for different habit tracking methods including:
+  - Yes/No habits (simple completion tracking)
+  - Counter habits (numerical goals)
+  - Timer habits (time-based tracking)
 
-There are several ways of editing your application.
+- **Calendar Heatmap**: Visualize your habit streaks and consistency with an interactive GitHub-style calendar heatmap
 
-**Use Lovable**
+- **Detailed Statistics**: Comprehensive stats including completion rates, streaks, and productivity graphs
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- **Year Review**: Annual summary of your habit progress and achievements
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Monthly Summaries**: Monthly breakdowns of habit performance
 
-**Use your preferred IDE**
+- **Responsive Design**: Fully responsive interface that works on desktop and mobile devices
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Data Persistence**: Local storage for habit data (future updates may include cloud sync)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Tech Stack
 
-Follow these steps:
+- **Frontend Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui
+- **Icons**: Lucide React
+- **Charts**: Recharts
+- **Date Handling**: date-fns
+- **Package Manager**: Bun
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## Installation
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Prerequisites
 
-# Step 3: Install the necessary dependencies.
-npm i
+- Node.js (version 18 or higher)
+- npm, yarn, or bun package manager
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Lovable-s-creation/my-daily-habits.git
+   cd my-daily-habits
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   yarn install
+   # or
+   bun install
+   ```
+
+3. **Start the development server**
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   # or
+   bun run dev
+   ```
+
+4. **Open your browser**
+
+   Navigate to `http://localhost:5173` to view the application.
+
+## Usage
+
+### Adding a Habit
+
+1. Click the "Add Habit" button on the main page
+2. Choose your habit type (Yes/No, Counter, or Timer)
+3. Set the habit name, description, and specific parameters
+4. Save to start tracking
+
+### Tracking Progress
+
+- **Yes/No Habits**: Simply mark as completed each day
+- **Counter Habits**: Increment the counter as you perform the habit
+- **Timer Habits**: Start/stop timers to track time spent
+
+### Viewing Statistics
+
+- Navigate to the "Stats" page for detailed analytics
+- View calendar heatmaps for visual progress
+- Check productivity graphs and completion rates
+
+### Year Review
+
+- Access the "Year Review" page for annual summaries
+- See your overall progress and achievements
+
+## Project Structure
+
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/             # shadcn/ui components
+│   ├── AddHabitModal.tsx
+│   ├── CalendarHeatmap.tsx
+│   ├── HabitList.tsx
+│   └── ...
+├── pages/              # Main application pages
+│   ├── Index.tsx
+│   ├── Stats.tsx
+│   └── YearReview.tsx
+├── hooks/              # Custom React hooks
+├── lib/                # Utility functions
+└── ...
 ```
 
-**Edit a file directly in GitHub**
+## Contributing
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-**Use GitHub Codespaces**
+## License
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+This project is licensed under the MIT License.
 
-## What technologies are used for this project?
+## Acknowledgments
 
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- Built with [Lovable](https://lovable.dev)
+- UI components powered by [shadcn/ui](https://ui.shadcn.com)
+- Icons from [Lucide](https://lucide.dev)
