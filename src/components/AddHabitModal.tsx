@@ -103,10 +103,15 @@ const AddHabitModal = ({ isOpen, onClose, onSave }: AddHabitModalProps) => {
               value={type}
               onChange={(e) => setType(e.target.value)}
             >
-              <option value="yes-no">Yes / No</option>
-              <option value="counter">Counter</option>
-              <option value="timer">Timer</option>
+              <option value="yes-no">✓ Done / Not Done</option>
+              <option value="counter"># Count-based</option>
+              <option value="timer">⏱ Time-based</option>
             </select>
+            <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+              {type === "yes-no" && "For habits you either do or skip (e.g. Workout, DSA practice)"}
+              {type === "counter" && "For habits where quantity matters (e.g. 10 problems, 20 pages)"}
+              {type === "timer" && "For habits measured in time (e.g. 60 minutes study)"}
+            </p>
           </div>
 
           <div>
