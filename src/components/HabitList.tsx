@@ -1,20 +1,24 @@
-import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { getTodayKey, getISTDate, getDateKey, parseISTDateKey } from "@/lib/dateUtils";
+import HabitCardYesNo from "./HabitCardYesNo";
+import HabitCardCounter from "./HabitCardCounter";
+import HabitCardTimer from "./HabitCardTimer";
 
 interface Habit {
   id: string;
   name: string;
   type: string;
   frequency: string;
-  completions?: Record<string, boolean>;
+  completions?: Record<string, boolean | number>;
   createdAt: string;
   bestStreak: number;
+  target?: number;
 }
 
 interface HabitListProps {
   habits: Habit[];
   onMarkDone: (habitId: string) => void;
+  onUpdateValue: (habitId: string, value: number, isCompleted: boolean) => void;
   onDelete: (habitId: string) => void;
 }
 
@@ -31,11 +35,18 @@ const getTypeLabel = (type: string) => {
   }
 };
 
-const calculateCurrentStreak = (completions: Record<string, boolean> = {}): number => {
+const calculateCurrentStreak = (completions: Record<string, boolean | number> = {}, type: string, target: number = 1): number => {
   const today = getISTDate();
   const todayKey = getDateKey(today);
 
-  if (!completions[todayKey]) {
+  const isCompleted = (value: boolean | number | undefined): boolean => {
+    if (value === undefined) return false;
+    if (typeof value === "boolean") return value;
+    // For counter/timer, check if value >= target
+    return value >= target;
+  };
+
+  if (!isCompleted(completions[todayKey])) {
     return 0;
   }
 
@@ -44,7 +55,7 @@ const calculateCurrentStreak = (completions: Record<string, boolean> = {}): numb
 
   while (true) {
     const dateKey = getDateKey(currentDate);
-    if (completions[dateKey]) {
+    if (isCompleted(completions[dateKey])) {
       streak++;
       currentDate.setDate(currentDate.getDate() - 1);
     } else {
@@ -56,8 +67,10 @@ const calculateCurrentStreak = (completions: Record<string, boolean> = {}): numb
 };
 
 const calculateConsistency = (
-  completions: Record<string, boolean> = {},
-  createdAt: string
+  completions: Record<string, boolean | number> = {},
+  createdAt: string,
+  type: string,
+  target: number = 1
 ): number => {
   const createdDate = parseISTDateKey(createdAt);
   const today = getISTDate();
@@ -71,27 +84,40 @@ const calculateConsistency = (
 
   if (daysSinceCreation <= 0) return 0;
 
-  const completedDays = Object.values(completions).filter(Boolean).length;
+  const completedDays = Object.values(completions).filter(value => {
+    if (typeof value === "boolean") return value;
+    return value >= target;
+  }).length;
 
   return Math.round((completedDays / daysSinceCreation) * 100);
 };
 
-const HabitList = ({ habits, onMarkDone, onDelete }: HabitListProps) => {
+const HabitList = ({ habits, onMarkDone, onUpdateValue, onDelete }: HabitListProps) => {
   const todayKey = getTodayKey();
 
   return (
     <div className="space-y-3">
       {habits.map((habit, index) => {
-        const isDoneToday = habit.completions?.[todayKey] === true;
+        const todayValue = habit.completions?.[todayKey];
+        const target = habit.target || 1;
+        
+        // Determine if completed based on type
+        const isDoneToday = habit.type === "yes-no" 
+          ? todayValue === true
+          : typeof todayValue === "number" && todayValue >= target;
+
         const isDaily = habit.frequency === "daily";
         
         const currentStreak = isDaily
-          ? calculateCurrentStreak(habit.completions)
+          ? calculateCurrentStreak(habit.completions, habit.type, target)
           : null;
         const bestStreak = isDaily ? habit.bestStreak || 0 : null;
         const consistency = isDaily
-          ? calculateConsistency(habit.completions, habit.createdAt)
+          ? calculateConsistency(habit.completions, habit.createdAt, habit.type, target)
           : null;
+
+        // Get current numeric value for counter/timer
+        const currentValue = typeof todayValue === "number" ? todayValue : 0;
 
         return (
           <div
@@ -137,13 +163,31 @@ const HabitList = ({ habits, onMarkDone, onDelete }: HabitListProps) => {
               </div>
 
               <div className="flex flex-col gap-2 items-end">
-                <button
-                  className={`btn-mark-done ${isDoneToday ? "done" : "active"}`}
-                  onClick={() => !isDoneToday && onMarkDone(habit.id)}
-                  disabled={isDoneToday}
-                >
-                  {isDoneToday ? "Done. Don't overthink it." : "Handled ✅"}
-                </button>
+                {/* Render different controls based on habit type */}
+                {habit.type === "yes-no" && (
+                  <HabitCardYesNo 
+                    isDoneToday={isDoneToday}
+                    onMarkDone={() => onMarkDone(habit.id)}
+                  />
+                )}
+
+                {habit.type === "counter" && (
+                  <HabitCardCounter
+                    currentValue={currentValue}
+                    target={target}
+                    onIncrement={() => onUpdateValue(habit.id, currentValue + 1, currentValue + 1 >= target)}
+                    onDecrement={() => onUpdateValue(habit.id, Math.max(0, currentValue - 1), currentValue - 1 >= target)}
+                  />
+                )}
+
+                {habit.type === "timer" && (
+                  <HabitCardTimer
+                    elapsedSeconds={currentValue}
+                    targetMinutes={target}
+                    onUpdate={(newElapsed, isCompleted) => onUpdateValue(habit.id, newElapsed, isCompleted)}
+                  />
+                )}
+
                 <button
                   className="p-1.5 rounded-md text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-all duration-200"
                   onClick={() => onDelete(habit.id)}
