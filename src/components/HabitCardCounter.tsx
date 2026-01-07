@@ -53,7 +53,7 @@ const HabitCardCounter = ({
       </div>
 
       {isCompleted && (
-        <span className="text-xs text-green-400 font-medium">Completed ✓</span>
+        <span className="text-xs text-green-400 font-medium">Completed</span>
       )}
     </div>
   );

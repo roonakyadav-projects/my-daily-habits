@@ -10,7 +10,7 @@ const HabitCardYesNo = ({ isDoneToday, onMarkDone }: HabitCardYesNoProps) => {
       onClick={() => !isDoneToday && onMarkDone()}
       disabled={isDoneToday}
     >
-      {isDoneToday ? "Done. Don't overthink it." : "Handled ✅"}
+      {isDoneToday ? "Done. Don't overthink it." : "Mark Done"}
     </button>
   );
 };
