@@ -88,7 +88,9 @@ const calculateConsistency = (
     return value >= target;
   }).length;
 
-  return Math.round((completedDays / daysSinceCreation) * 100);
+  const rate = Math.round((completedDays / daysSinceCreation) * 100);
+  // Clamp between 0-100
+  return Math.min(100, Math.max(0, rate));
 };
 
 // Get completion state for display
@@ -120,7 +122,7 @@ const HabitList = ({ habits, onMarkDone, onUpdateValue, onDelete }: HabitListPro
   const todayKey = getTodayKey();
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {habits.map((habit, index) => {
         const todayValue = habit.completions?.[todayKey];
         const target = habit.target || 1;
@@ -152,32 +154,32 @@ const HabitList = ({ habits, onMarkDone, onUpdateValue, onDelete }: HabitListPro
             className={`habit-card ${isDoneToday ? "completed" : ""}`}
             style={{ animationDelay: `${index * 50}ms` }}
           >
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-medium text-lg truncate">{habit.name}</h3>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-medium text-base truncate">{habit.name}</h3>
                   {completionState.label && (
                     <span className={`text-xs font-medium flex-shrink-0 ${completionState.className}`}>
                       {completionState.label}
                     </span>
                   )}
                 </div>
-                <div className="flex gap-3 mt-1.5 text-sm text-muted-foreground">
+                <div className="flex gap-2 text-xs text-muted-foreground">
                   <span>{getTypeLabel(habit.type)}</span>
-                  <span className="opacity-50">•</span>
+                  <span className="opacity-50">·</span>
                   <span className="capitalize">{habit.frequency}</span>
                 </div>
 
                 {isDaily && (
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm">
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-xs">
                     {currentStreak === 0 ? (
-                      <span className="text-muted-foreground text-xs">
-                        Streak reset. Happens. Start again.
+                      <span className="text-muted-foreground">
+                        Streak reset. Start again.
                       </span>
                     ) : (
                       <>
                         <span className="text-orange-400">
-                          {currentStreak} day{currentStreak !== 1 ? "s" : ""} run
+                          🔥 {currentStreak}d run
                         </span>
                         <span className="text-muted-foreground">
                           Best: {bestStreak}
@@ -185,8 +187,14 @@ const HabitList = ({ habits, onMarkDone, onUpdateValue, onDelete }: HabitListPro
                       </>
                     )}
                     <span className="text-muted-foreground">
-                      {consistency}% showing up
+                      {consistency}% rate
                     </span>
+                  </div>
+                )}
+
+                {!isDaily && (
+                  <div className="mt-3 text-xs text-muted-foreground">
+                    Weekly — complete once per week
                   </div>
                 )}
               </div>
