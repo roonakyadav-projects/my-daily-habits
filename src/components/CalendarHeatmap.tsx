@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getLastNDays, getDateKey } from "@/lib/dateUtils";
 
 interface CalendarHeatmapProps {
   habits: Array<{
@@ -8,13 +9,6 @@ interface CalendarHeatmapProps {
   }>;
 }
 
-const getDateKey = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
 const formatDate = (dateKey: string) => {
   const date = new Date(dateKey + "T00:00:00");
   return date.toLocaleDateString("en-US", {
@@ -22,19 +16,6 @@ const formatDate = (dateKey: string) => {
     month: "short",
     day: "numeric",
   });
-};
-
-const getLast90Days = () => {
-  const days: string[] = [];
-  const today = new Date();
-  
-  for (let i = 89; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(today.getDate() - i);
-    days.push(getDateKey(date));
-  }
-  
-  return days;
 };
 
 const getIntensityClass = (count: number, maxCount: number) => {
@@ -50,7 +31,7 @@ const CalendarHeatmap = ({ habits }: CalendarHeatmapProps) => {
   const [hoveredDay, setHoveredDay] = useState<string | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
-  const days = getLast90Days();
+  const days = getLastNDays(90);
 
   // Calculate completions per day
   const completionsPerDay: Record<string, number> = {};

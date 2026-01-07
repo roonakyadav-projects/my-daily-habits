@@ -1,3 +1,5 @@
+import { getISTDate, parseISTDateKey } from "@/lib/dateUtils";
+
 interface Habit {
   id: string;
   name: string;
@@ -16,8 +18,8 @@ const calculateCompletionRate = (
   completions: Record<string, boolean> = {},
   createdAt: string
 ): number => {
-  const createdDate = new Date(createdAt);
-  const today = new Date();
+  const createdDate = parseISTDateKey(createdAt);
+  const today = getISTDate();
 
   createdDate.setHours(0, 0, 0, 0);
   today.setHours(0, 0, 0, 0);

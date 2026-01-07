@@ -3,6 +3,7 @@ import BottomNav from "@/components/BottomNav";
 import ProductivityGraph from "@/components/ProductivityGraph";
 import CalendarHeatmap from "@/components/CalendarHeatmap";
 import HabitStatsList from "@/components/HabitStatsList";
+import { getTodayKey, getISTDate, parseISTDateKey } from "@/lib/dateUtils";
 
 interface Habit {
   id: string;
@@ -16,13 +17,6 @@ interface Habit {
 
 const STORAGE_KEY = "habits";
 
-const getDateKey = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
 const Stats = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
 
@@ -33,7 +27,7 @@ const Stats = () => {
         const parsed = JSON.parse(stored);
         const migrated = parsed.map((habit: Habit) => ({
           ...habit,
-          createdAt: habit.createdAt || getDateKey(new Date()),
+          createdAt: habit.createdAt || getTodayKey(),
           bestStreak: habit.bestStreak || 0,
         }));
         setHabits(migrated);
@@ -70,11 +64,11 @@ const Stats = () => {
     });
 
     let totalConsistency = 0;
-    const today = new Date();
+    const today = getISTDate();
     today.setHours(0, 0, 0, 0);
 
     habits.forEach((habit) => {
-      const createdDate = new Date(habit.createdAt);
+      const createdDate = parseISTDateKey(habit.createdAt);
       createdDate.setHours(0, 0, 0, 0);
       const daysSinceCreation =
         Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;

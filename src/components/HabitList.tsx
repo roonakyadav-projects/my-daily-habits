@@ -1,3 +1,5 @@
+import { getTodayKey, getISTDate, getDateKey, parseISTDateKey } from "@/lib/dateUtils";
+
 interface Habit {
   id: string;
   name: string;
@@ -16,33 +18,18 @@ interface HabitListProps {
 const getTypeLabel = (type: string) => {
   switch (type) {
     case "yes-no":
-      return "Yes / No";
+      return "Done / Not Done";
     case "counter":
-      return "Counter";
+      return "Count-based";
     case "timer":
-      return "Timer";
+      return "Time-based";
     default:
       return type;
   }
 };
 
-const getTodayKey = () => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
-const getDateKey = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
 const calculateCurrentStreak = (completions: Record<string, boolean> = {}): number => {
-  const today = new Date();
+  const today = getISTDate();
   const todayKey = getDateKey(today);
 
   if (!completions[todayKey]) {
@@ -69,8 +56,8 @@ const calculateConsistency = (
   completions: Record<string, boolean> = {},
   createdAt: string
 ): number => {
-  const createdDate = new Date(createdAt);
-  const today = new Date();
+  const createdDate = parseISTDateKey(createdAt);
+  const today = getISTDate();
   
   createdDate.setHours(0, 0, 0, 0);
   today.setHours(0, 0, 0, 0);
