@@ -189,7 +189,7 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
     <div className="habit-card">
       {/* Header with toggle */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-medium">Productivity Trend</h3>
+        <h3 className="text-base font-medium">Are You Locking In?</h3>
         <div className="flex bg-secondary/50 rounded-lg p-0.5">
           <button
             onClick={() => setViewMode("weekly")}
@@ -199,7 +199,7 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Weekly
+            This Grind
           </button>
           <button
             onClick={() => setViewMode("monthly")}
@@ -209,7 +209,7 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Monthly
+            Big Picture
           </button>
         </div>
       </div>
@@ -338,16 +338,15 @@ const ProductivityGraph = ({ habits }: ProductivityGraphProps) => {
               {insights.trend === "up" ? "📈" : insights.trend === "down" ? "📉" : "➡️"}
             </span>
             <span className="text-sm">
-              Productivity is{" "}
-              <span className={
-                insights.trend === "up" 
-                  ? "text-green-400" 
-                  : insights.trend === "down" 
-                    ? "text-red-400" 
-                    : "text-muted-foreground"
-              }>
-                {insights.trend === "up" ? "trending up" : insights.trend === "down" ? "trending down" : "stable"}
-              </span>
+              {insights.trend === "up" && (
+                <span className="text-green-400">Momentum looks good. Don't break it.</span>
+              )}
+              {insights.trend === "down" && (
+                <span className="text-red-400">You slipped. Not the end. Lock back in.</span>
+              )}
+              {insights.trend === "stable" && (
+                <span className="text-muted-foreground">You're coasting. Push harder.</span>
+              )}
             </span>
           </div>
           

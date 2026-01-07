@@ -52,15 +52,15 @@ const HabitStatsList = ({ habits }: HabitStatsListProps) => {
             <h4 className="font-medium">{habit.name}</h4>
             <div className="grid grid-cols-3 gap-4 mt-3 text-sm">
               <div>
-                <div className="text-muted-foreground text-xs">Completions</div>
+                <div className="text-muted-foreground text-xs">Times Done</div>
                 <div className="font-semibold text-lg">{totalCompletions}</div>
               </div>
               <div>
-                <div className="text-muted-foreground text-xs">Rate</div>
+                <div className="text-muted-foreground text-xs">Showing Up</div>
                 <div className="font-semibold text-lg">{completionRate}%</div>
               </div>
               <div>
-                <div className="text-muted-foreground text-xs">Best Streak</div>
+                <div className="text-muted-foreground text-xs">Best Run</div>
                 <div className="font-semibold text-lg">{habit.bestStreak || 0}</div>
               </div>
             </div>
