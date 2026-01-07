@@ -8,9 +8,18 @@ interface Habit {
   name: string;
   type: string;
   frequency: string;
+  completions?: Record<string, boolean>;
 }
 
 const STORAGE_KEY = "habits";
+
+const getTodayKey = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 const Index = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -37,9 +46,26 @@ const Index = () => {
   };
 
   const handleAddHabit = (habit: Habit) => {
-    const newHabits = [...habits, habit];
+    const newHabits = [...habits, { ...habit, completions: {} }];
     saveHabits(newHabits);
     setIsModalOpen(false);
+  };
+
+  const handleMarkDone = (habitId: string) => {
+    const todayKey = getTodayKey();
+    const newHabits = habits.map((habit) => {
+      if (habit.id === habitId) {
+        return {
+          ...habit,
+          completions: {
+            ...habit.completions,
+            [todayKey]: true,
+          },
+        };
+      }
+      return habit;
+    });
+    saveHabits(newHabits);
   };
 
   return (
@@ -72,7 +98,7 @@ const Index = () => {
                 Add Habit
               </button>
             </div>
-            <HabitList habits={habits} />
+            <HabitList habits={habits} onMarkDone={handleMarkDone} />
           </div>
         )}
       </main>
