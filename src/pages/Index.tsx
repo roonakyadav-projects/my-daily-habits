@@ -9,6 +9,8 @@ interface Habit {
   type: string;
   frequency: string;
   completions?: Record<string, boolean>;
+  createdAt: string;
+  bestStreak: number;
 }
 
 const STORAGE_KEY = "habits";
@@ -21,6 +23,37 @@ const getTodayKey = () => {
   return `${year}-${month}-${day}`;
 };
 
+const getDateKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const calculateCurrentStreak = (completions: Record<string, boolean> = {}): number => {
+  const today = new Date();
+  const todayKey = getDateKey(today);
+
+  if (!completions[todayKey]) {
+    return 0;
+  }
+
+  let streak = 0;
+  let currentDate = new Date(today);
+
+  while (true) {
+    const dateKey = getDateKey(currentDate);
+    if (completions[dateKey]) {
+      streak++;
+      currentDate.setDate(currentDate.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+};
+
 const Index = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,7 +63,14 @@ const Index = () => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
-        setHabits(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        // Migrate old habits without createdAt/bestStreak
+        const migrated = parsed.map((habit: Habit) => ({
+          ...habit,
+          createdAt: habit.createdAt || getTodayKey(),
+          bestStreak: habit.bestStreak || 0,
+        }));
+        setHabits(migrated);
       } catch {
         localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
       }
@@ -39,14 +79,19 @@ const Index = () => {
     }
   }, []);
 
-  // Save habits to localStorage whenever they change
   const saveHabits = (newHabits: Habit[]) => {
     setHabits(newHabits);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newHabits));
   };
 
-  const handleAddHabit = (habit: Habit) => {
-    const newHabits = [...habits, { ...habit, completions: {} }];
+  const handleAddHabit = (habit: { id: string; name: string; type: string; frequency: string }) => {
+    const newHabit: Habit = {
+      ...habit,
+      completions: {},
+      createdAt: getTodayKey(),
+      bestStreak: 0,
+    };
+    const newHabits = [...habits, newHabit];
     saveHabits(newHabits);
     setIsModalOpen(false);
   };
@@ -55,12 +100,21 @@ const Index = () => {
     const todayKey = getTodayKey();
     const newHabits = habits.map((habit) => {
       if (habit.id === habitId) {
+        const newCompletions = {
+          ...habit.completions,
+          [todayKey]: true,
+        };
+
+        // Calculate new current streak
+        const newCurrentStreak = calculateCurrentStreak(newCompletions);
+
+        // Update best streak if current exceeds it
+        const newBestStreak = Math.max(habit.bestStreak || 0, newCurrentStreak);
+
         return {
           ...habit,
-          completions: {
-            ...habit.completions,
-            [todayKey]: true,
-          },
+          completions: newCompletions,
+          bestStreak: newBestStreak,
         };
       }
       return habit;
