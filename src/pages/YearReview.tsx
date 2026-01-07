@@ -1,15 +1,18 @@
 import { useEffect, useState, useMemo } from "react";
+import { Info } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
-import { getTodayKey, getISTDate, getDateKey, parseISTDateKey, getFullMonthName, isInYear } from "@/lib/dateUtils";
+import InfoModal from "@/components/InfoModal";
+import { getTodayKey, getISTDate, getDateKey, parseISTDateKey, isInYear } from "@/lib/dateUtils";
 
 interface Habit {
   id: string;
   name: string;
   type: string;
   frequency: string;
-  completions?: Record<string, boolean>;
+  completions?: Record<string, boolean | number>;
   createdAt: string;
   bestStreak: number;
+  target?: number;
 }
 
 const STORAGE_KEY = "habits";
@@ -17,6 +20,7 @@ const YEAR = 2026;
 
 const YearReview = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -37,15 +41,22 @@ const YearReview = () => {
 
   const yearData = useMemo(() => {
     const today = getISTDate();
-    const currentYear = today.getFullYear();
     
+    // Helper to check if a completion value counts as "done"
+    const isCompleted = (value: boolean | number | undefined, target: number = 1): boolean => {
+      if (value === undefined) return false;
+      if (typeof value === "boolean") return value;
+      return value >= target;
+    };
+
     // Filter completions for 2026 only
     const yearCompletions: Record<string, number> = {};
     let totalCompletions = 0;
     
     habits.forEach((habit) => {
-      Object.entries(habit.completions || {}).forEach(([date, completed]) => {
-        if (completed && isInYear(date, YEAR)) {
+      const target = habit.target || 1;
+      Object.entries(habit.completions || {}).forEach(([date, value]) => {
+        if (isCompleted(value, target) && isInYear(date, YEAR)) {
           yearCompletions[date] = (yearCompletions[date] || 0) + 1;
           totalCompletions++;
         }
@@ -72,10 +83,11 @@ const YearReview = () => {
         const dateKey = getDateKey(d);
         habits.forEach((habit) => {
           const createdDate = parseISTDateKey(habit.createdAt);
+          const target = habit.target || 1;
           if (d >= createdDate && isInYear(dateKey, YEAR)) {
             if (habit.frequency === "daily") {
               possible++;
-              if (habit.completions?.[dateKey]) completed++;
+              if (isCompleted(habit.completions?.[dateKey], target)) completed++;
             }
           }
         });
@@ -97,8 +109,9 @@ const YearReview = () => {
 
     // Habit analysis
     const habitStats = habits.map((habit) => {
+      const target = habit.target || 1;
       const yearCompletionsForHabit = Object.entries(habit.completions || {}).filter(
-        ([date, completed]) => completed && isInYear(date, YEAR)
+        ([date, value]) => isCompleted(value, target) && isInYear(date, YEAR)
       ).length;
 
       const createdDate = parseISTDateKey(habit.createdAt);
@@ -131,40 +144,81 @@ const YearReview = () => {
       }
     });
 
-    // Average showing up %
+    // Calculate totals for the year
     const totalPossible = monthlyData.reduce((sum, m) => sum + m.possible, 0);
     const totalCompleted = monthlyData.reduce((sum, m) => sum + m.completed, 0);
     const avgShowingUp = totalPossible > 0 ? Math.round((totalCompleted / totalPossible) * 100) : 0;
 
-    // Discipline score calculation
-    // Based on: consistency (40%), streak behavior (30%), recovery (30%)
-    const consistencyScore = avgShowingUp * 0.4;
-    
-    // Streak score - based on longest streak relative to days tracked
-    const streakScore = daysTracked > 0 ? Math.min(100, (longestStreak / Math.min(daysTracked, 30)) * 100) * 0.3 : 0;
-    
-    // Recovery score - how well they bounce back after slumps
-    let recoveryScore = 50; // Default middle ground
-    if (monthsWithData.length >= 2) {
-      let recoveries = 0;
-      let slumps = 0;
-      for (let i = 1; i < monthsWithData.length; i++) {
-        if (monthsWithData[i - 1].productivity < 50 && monthsWithData[i].productivity > monthsWithData[i - 1].productivity) {
-          recoveries++;
-        }
-        if (monthsWithData[i - 1].productivity < 40) {
-          slumps++;
-        }
-      }
-      if (slumps > 0) {
-        recoveryScore = Math.min(100, (recoveries / slumps) * 100);
-      } else if (avgShowingUp > 60) {
-        recoveryScore = 80; // No slumps, consistent
-      }
+    // ===== NEW DISCIPLINE SCORE CALCULATION =====
+    // Formula:
+    // - Completion Rate (40%): completed_days / expected_days
+    // - Streak Strength (30%): min(current_streak / 21, 1)
+    // - Consistency (20%): active_days / days_since_first_habit
+    // - Recovery (10%): successful_comebacks / missed_days
+
+    // 1. Completion Rate (40%)
+    const completionRate = totalPossible > 0 ? (totalCompleted / totalPossible) : 0;
+    const completionScore = completionRate * 100 * 0.4;
+
+    // 2. Streak Strength (30%) - capped at 21 days (habit formation threshold)
+    const streakStrength = Math.min(longestStreak / 21, 1);
+    const streakScore = streakStrength * 100 * 0.3;
+
+    // 3. Consistency (20%) - active days / days since first habit
+    let daysSinceFirstHabit = 0;
+    if (habits.length > 0) {
+      const firstHabitDate = habits.reduce((earliest, h) => {
+        const created = parseISTDateKey(h.createdAt);
+        return created < earliest ? created : earliest;
+      }, parseISTDateKey(habits[0].createdAt));
+      
+      const yearStart = new Date(YEAR, 0, 1);
+      const startDate = firstHabitDate > yearStart ? firstHabitDate : yearStart;
+      const endDate = today > new Date(YEAR, 11, 31) ? new Date(YEAR, 11, 31) : today;
+      daysSinceFirstHabit = Math.max(1, Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1);
     }
-    recoveryScore *= 0.3;
+    const consistencyRatio = daysSinceFirstHabit > 0 ? Math.min(daysTracked / daysSinceFirstHabit, 1) : 0;
+    const consistencyScore = consistencyRatio * 100 * 0.2;
+
+    // 4. Recovery (10%) - successful comebacks / missed days
+    let missedDays = 0;
+    let successfulComebacks = 0;
     
-    const disciplineScore = Math.round(consistencyScore + streakScore + recoveryScore);
+    // Calculate missed days and comebacks by analyzing completion patterns
+    habits.forEach((habit) => {
+      if (habit.frequency !== "daily") return;
+      
+      const target = habit.target || 1;
+      const createdDate = parseISTDateKey(habit.createdAt);
+      const startDate = createdDate.getFullYear() < YEAR ? new Date(YEAR, 0, 1) : createdDate;
+      const endDate = today > new Date(YEAR, 11, 31) ? new Date(YEAR, 11, 31) : today;
+      
+      let wasCompleted = false;
+      let justMissed = false;
+      
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const dateKey = getDateKey(d);
+        const completed = isCompleted(habit.completions?.[dateKey], target);
+        
+        if (!completed) {
+          missedDays++;
+          justMissed = true;
+        } else {
+          if (justMissed && wasCompleted) {
+            // This is a comeback: was completing, missed some, now completing again
+            successfulComebacks++;
+          }
+          justMissed = false;
+        }
+        wasCompleted = completed;
+      }
+    });
+    
+    const recoveryRatio = missedDays > 0 ? Math.min(successfulComebacks / missedDays, 1) : (totalCompleted > 0 ? 1 : 0);
+    const recoveryScore = recoveryRatio * 100 * 0.1;
+
+    // Final discipline score
+    const disciplineScore = Math.round(completionScore + streakScore + consistencyScore + recoveryScore);
 
     return {
       daysTracked,
@@ -178,6 +232,13 @@ const YearReview = () => {
       mostStruggled,
       disciplineScore,
       hasData: habits.length > 0 && totalCompletions > 0,
+      // Debug info (can be removed later)
+      scoreBreakdown: {
+        completion: Math.round(completionScore),
+        streak: Math.round(streakScore),
+        consistency: Math.round(consistencyScore),
+        recovery: Math.round(recoveryScore),
+      },
     };
   }, [habits]);
 
@@ -224,8 +285,15 @@ const YearReview = () => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="app-header">
+      <header className="app-header relative">
         <h1 className="text-xl font-semibold text-center">Your {YEAR}</h1>
+        <button
+          className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-200"
+          onClick={() => setIsInfoOpen(true)}
+          title="How scoring works"
+        >
+          <Info size={20} />
+        </button>
       </header>
 
       {/* Main Content */}
@@ -256,7 +324,7 @@ const YearReview = () => {
                   <div className="text-xs text-muted-foreground mt-1">Showing Up %</div>
                 </div>
                 <div className="stat-card">
-                  <div className="text-2xl font-bold text-orange-400">🔥 {yearData.longestStreak}</div>
+                  <div className="text-2xl font-bold text-orange-400">{yearData.longestStreak}</div>
                   <div className="text-xs text-muted-foreground mt-1">Longest Run</div>
                 </div>
               </div>
@@ -338,7 +406,7 @@ const YearReview = () => {
                 <div className="text-sm text-muted-foreground">
                   {getDisciplineLabel(yearData.disciplineScore)}
                 </div>
-                <div className="mt-4 h-2 bg-neutral-800 rounded-full overflow-hidden">
+                <div className="mt-4 h-2 bg-secondary rounded-full overflow-hidden">
                   <div 
                     className="h-full rounded-full transition-all duration-500"
                     style={{ 
@@ -351,6 +419,28 @@ const YearReview = () => {
                     }}
                   />
                 </div>
+                
+                {/* Score breakdown */}
+                <div className="mt-4 pt-4 border-t border-border">
+                  <div className="grid grid-cols-4 gap-2 text-xs">
+                    <div>
+                      <div className="text-foreground font-medium">{yearData.scoreBreakdown.completion}</div>
+                      <div className="text-muted-foreground">Completion</div>
+                    </div>
+                    <div>
+                      <div className="text-foreground font-medium">{yearData.scoreBreakdown.streak}</div>
+                      <div className="text-muted-foreground">Streak</div>
+                    </div>
+                    <div>
+                      <div className="text-foreground font-medium">{yearData.scoreBreakdown.consistency}</div>
+                      <div className="text-muted-foreground">Consistency</div>
+                    </div>
+                    <div>
+                      <div className="text-foreground font-medium">{yearData.scoreBreakdown.recovery}</div>
+                      <div className="text-muted-foreground">Recovery</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -359,6 +449,9 @@ const YearReview = () => {
 
       {/* Bottom Navigation */}
       <BottomNav />
+
+      {/* Info Modal */}
+      <InfoModal isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} />
     </div>
   );
 };

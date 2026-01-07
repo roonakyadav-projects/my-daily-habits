@@ -42,7 +42,6 @@ const calculateCurrentStreak = (completions: Record<string, boolean | number> = 
   const isCompleted = (value: boolean | number | undefined): boolean => {
     if (value === undefined) return false;
     if (typeof value === "boolean") return value;
-    // For counter/timer, check if value >= target
     return value >= target;
   };
 
@@ -92,6 +91,31 @@ const calculateConsistency = (
   return Math.round((completedDays / daysSinceCreation) * 100);
 };
 
+// Get completion state for display
+const getCompletionState = (
+  type: string, 
+  todayValue: boolean | number | undefined, 
+  target: number
+): { label: string; className: string } => {
+  if (type === "yes-no") {
+    if (todayValue === true) {
+      return { label: "Completed", className: "text-green-400" };
+    }
+    return { label: "", className: "" };
+  }
+
+  // Counter or Timer
+  if (typeof todayValue === "number") {
+    if (todayValue >= target) {
+      return { label: "Completed", className: "text-green-400" };
+    }
+    if (todayValue > 0) {
+      return { label: "In progress", className: "text-yellow-400" };
+    }
+  }
+  return { label: "", className: "" };
+};
+
 const HabitList = ({ habits, onMarkDone, onUpdateValue, onDelete }: HabitListProps) => {
   const todayKey = getTodayKey();
 
@@ -119,6 +143,9 @@ const HabitList = ({ habits, onMarkDone, onUpdateValue, onDelete }: HabitListPro
         // Get current numeric value for counter/timer
         const currentValue = typeof todayValue === "number" ? todayValue : 0;
 
+        // Get completion state
+        const completionState = getCompletionState(habit.type, todayValue, target);
+
         return (
           <div
             key={habit.id}
@@ -129,8 +156,10 @@ const HabitList = ({ habits, onMarkDone, onUpdateValue, onDelete }: HabitListPro
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="font-medium text-lg truncate">{habit.name}</h3>
-                  {isDoneToday && (
-                    <span className="text-green-400 text-sm flex-shrink-0">✓</span>
+                  {completionState.label && (
+                    <span className={`text-xs font-medium flex-shrink-0 ${completionState.className}`}>
+                      {completionState.label}
+                    </span>
                   )}
                 </div>
                 <div className="flex gap-3 mt-1.5 text-sm text-muted-foreground">
@@ -148,10 +177,10 @@ const HabitList = ({ habits, onMarkDone, onUpdateValue, onDelete }: HabitListPro
                     ) : (
                       <>
                         <span className="text-orange-400">
-                          🔥 {currentStreak} day{currentStreak !== 1 ? "s" : ""} run
+                          {currentStreak} day{currentStreak !== 1 ? "s" : ""} run
                         </span>
-                        <span className="text-yellow-500">
-                          🏆 Best: {bestStreak}
+                        <span className="text-muted-foreground">
+                          Best: {bestStreak}
                         </span>
                       </>
                     )}

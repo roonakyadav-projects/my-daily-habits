@@ -123,7 +123,7 @@ const HabitCardTimer = ({
         {/* Controls */}
         <div className="flex gap-1.5">
           {isCompleted ? (
-            <span className="text-xs text-green-400 font-medium py-1">Done ✓</span>
+            <span className="text-xs text-green-400 font-medium py-1">Completed</span>
           ) : (
             <>
               <button
