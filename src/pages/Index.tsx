@@ -10,18 +10,25 @@ interface Habit {
   name: string;
   type: string;
   frequency: string;
-  completions?: Record<string, boolean>;
+  completions?: Record<string, boolean | number>;
   createdAt: string;
   bestStreak: number;
+  target?: number;
 }
 
 const STORAGE_KEY = "habits";
 
-const calculateCurrentStreak = (completions: Record<string, boolean> = {}): number => {
+const calculateCurrentStreak = (completions: Record<string, boolean | number> = {}, type: string, target: number = 1): number => {
   const today = getISTDate();
   const todayKey = getDateKey(today);
 
-  if (!completions[todayKey]) {
+  const isCompleted = (value: boolean | number | undefined): boolean => {
+    if (value === undefined) return false;
+    if (typeof value === "boolean") return value;
+    return value >= target;
+  };
+
+  if (!isCompleted(completions[todayKey])) {
     return 0;
   }
 
@@ -30,7 +37,7 @@ const calculateCurrentStreak = (completions: Record<string, boolean> = {}): numb
 
   while (true) {
     const dateKey = getDateKey(currentDate);
-    if (completions[dateKey]) {
+    if (isCompleted(completions[dateKey])) {
       streak++;
       currentDate.setDate(currentDate.getDate() - 1);
     } else {
@@ -70,7 +77,7 @@ const Index = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newHabits));
   };
 
-  const handleAddHabit = (habit: { id: string; name: string; type: string; frequency: string }) => {
+  const handleAddHabit = (habit: { id: string; name: string; type: string; frequency: string; target?: number }) => {
     const newHabit: Habit = {
       ...habit,
       completions: {},
@@ -91,8 +98,35 @@ const Index = () => {
           [todayKey]: true,
         };
 
-        const newCurrentStreak = calculateCurrentStreak(newCompletions);
+        const newCurrentStreak = calculateCurrentStreak(newCompletions, habit.type, habit.target);
         const newBestStreak = Math.max(habit.bestStreak || 0, newCurrentStreak);
+
+        return {
+          ...habit,
+          completions: newCompletions,
+          bestStreak: newBestStreak,
+        };
+      }
+      return habit;
+    });
+    saveHabits(newHabits);
+  };
+
+  const handleUpdateValue = (habitId: string, value: number, isCompleted: boolean) => {
+    const todayKey = getTodayKey();
+    const newHabits = habits.map((habit) => {
+      if (habit.id === habitId) {
+        const newCompletions = {
+          ...habit.completions,
+          [todayKey]: value,
+        };
+
+        // Only update best streak if completed
+        let newBestStreak = habit.bestStreak || 0;
+        if (isCompleted) {
+          const newCurrentStreak = calculateCurrentStreak(newCompletions, habit.type, habit.target);
+          newBestStreak = Math.max(newBestStreak, newCurrentStreak);
+        }
 
         return {
           ...habit,
@@ -154,6 +188,7 @@ const Index = () => {
             <HabitList 
               habits={habits} 
               onMarkDone={handleMarkDone} 
+              onUpdateValue={handleUpdateValue}
               onDelete={handleDeleteClick}
             />
           </div>
